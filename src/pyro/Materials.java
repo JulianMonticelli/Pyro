@@ -12,7 +12,7 @@ import java.awt.Color;
  * @author Julian
  */
 public class Materials {
-    private static final int NUM_MATERIALS = 40; // Add 1 every time we add a material
+    private static final int NUM_MATERIALS = 50; // Add 1 every time we add a material
     
     public static final int EXPLOSION_NONE = 0;
     public static final int EXPLOSION_REMOVE = 1;
@@ -44,28 +44,30 @@ public class Materials {
     public static final int FUSE = 20;
     public static final int ELECTRICITY = 21;
     public static final int ELECTRICITY_LIGHTNING = 22;
-    public static final int LIFE_SEED = 23;
-    public static final int LIFE_SEED_EDGE = 24;
-    public static final int GASOLINE = 25;
-    public static final int LITHIUM = 26;
-    public static final int SODIUM = 27;
-    public static final int POTASSIUM = 28;
-    public static final int RUBIDIUM = 29;
-    public static final int CESIUM = 29;
-    public static final int ANTI_MATTER = 30;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_1 = 31;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_2 = 32;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_3 = 33;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_4 = 34;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_5 = 35;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_6 = 36;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_7 = 37;
-    public static final int ANTI_MATTER_EXPLOSION_FLASH_8 = 38;
+    public static final int ELECTRICITY_SPARK = 23;
+    public static final int LIFE_SEED = 33;
+    public static final int LIFE_SEED_EDGE = 34;
+    public static final int GASOLINE = 35;
+    public static final int LITHIUM = 36;
+    public static final int SODIUM = 37;
+    public static final int POTASSIUM = 38;
+    public static final int RUBIDIUM = 39;
+    public static final int CESIUM = 39;
+    public static final int ANTI_MATTER = 40;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_1 = 41;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_2 = 42;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_3 = 43;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_4 = 44;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_5 = 45;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_6 = 46;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_7 = 47;
+    public static final int ANTI_MATTER_EXPLOSION_FLASH_8 = 48;
     
     
     private static boolean[] falls;
     private static boolean[] burns;
     private static boolean[] isBurnable;
+    private static boolean[] isSparkable;
     private static int[] burnIndex;
     private static boolean[] negatesFire;
     private static int[] flowIndex;
@@ -84,6 +86,7 @@ public class Materials {
         color = new Color[NUM_MATERIALS];
         burns = new boolean[NUM_MATERIALS];
         isBurnable = new boolean[NUM_MATERIALS];
+        isSparkable = new boolean[NUM_MATERIALS];
         negatesFire = new boolean[NUM_MATERIALS];
         flowIndex = new int[NUM_MATERIALS];
         burnIndex = new int[NUM_MATERIALS];
@@ -204,7 +207,7 @@ public class Materials {
         
         // FUSE
         falls[FUSE] = false;
-        isBurnable[FUSE] = true;
+        isSparkable[FUSE] = true;
         color[FUSE] = Color.decode("#A3A3A3");
         burnIndex[FUSE] = 15;
         
@@ -234,17 +237,24 @@ public class Materials {
         burns[ELECTRICITY_LIGHTNING] = true;
         isElectric[ELECTRICITY_LIGHTNING] = true;
         
+        
+        // ELECTRICITY_LIGHTNING
+        falls[ELECTRICITY_SPARK] = false;
+        color[ELECTRICITY_SPARK] = Color.YELLOW;
+        burns[ELECTRICITY_SPARK] = true;
+        isElectric[ELECTRICITY_SPARK] = true;
+        
         // LIFE_SEED
         falls[LIFE_SEED] = false;
         color[LIFE_SEED] = Color.decode("#646D20");
         isBurnable[LIFE_SEED] = true;
-        burnIndex[LIFE_SEED] = 30;
+        burnIndex[LIFE_SEED] = 25;
         
         // LIFE_SEED_EDGE
         falls[LIFE_SEED_EDGE] = false;
         color[LIFE_SEED_EDGE] = Color.decode("#484F16");
         isBurnable[LIFE_SEED_EDGE] = true;
-        burnIndex[LIFE_SEED_EDGE] = 25;
+        burnIndex[LIFE_SEED_EDGE] = 35;
         
         // GASOLINE
         falls[GASOLINE] = true; // Water should fall - need to implement "flatness" of water
@@ -313,6 +323,10 @@ public class Materials {
         return isBurnable[material];
     }
     
+    public static boolean isSparkable(int material) {
+        return isSparkable[material];
+    }
+    
     public static boolean negatesFire(int material) {
         return negatesFire[material];
     }
@@ -336,6 +350,10 @@ public class Materials {
         return spawnsWater[material];
     }
     
+    public static boolean isExplosive(int material) {
+        return explosionIndex[material] > 0;
+    }
+    
     public static int getExplosionIndex(int material) {
         return explosionIndex[material];
     }
@@ -355,4 +373,9 @@ public class Materials {
     public static boolean isAntiGravity(int material) {
         return isAntiGravity[material];
     }
+    
+    public static boolean flows(int material) {
+        return flowIndex[material] > 0;
+    }
+    
 }

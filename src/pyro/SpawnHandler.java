@@ -12,17 +12,18 @@ import java.util.Random;
  * @author Julian
  */
 public class SpawnHandler {
-    public static void handleSpawnsWater(int x, int y, int[][] pixel, Random rand) {
+    public static void handleSpawnsWater(int x, int y, int[][] pixelRead, int[][] pixelWrite, Random rand) {
+        pixelWrite[x][y] = pixelRead[x][y]; // Set itself to be in write buffer
         int cloudThreshold = 145 + rand.nextInt(4);
-        if (y < pixel[0].length - 1) {
-            if (pixel[x][y+1] == Materials.NOTHING) {
+        if (y < pixelRead[0].length - 1) {
+            if (pixelRead[x][y+1] == Materials.NOTHING) {
 
                 if (rand.nextInt(150) > cloudThreshold) {
-                    pixel[x][y+1] = Materials.WATER;
+                    pixelWrite[x][y+1] = Materials.WATER;
                 }
-                else if (pixel[x][y] == Materials.RAIN_CLOUD) {
+                else if (pixelRead[x][y] == Materials.RAIN_CLOUD) {
                     if (rand.nextInt(100000) > 99998) {
-                        pixel[x][y+1] = Materials.ELECTRICITY;
+                        pixelWrite[x][y+1] = Materials.ELECTRICITY_LIGHTNING;
                     }
                 }
             }

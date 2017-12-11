@@ -11,100 +11,128 @@ import java.util.Random;
 /**
  * @author Julian
  */
+
+// BROKEN
 public class FireHandler {
     
-    public static void handleFire(int x, int y, int[][] pixel, int[][] pixelAge, Random rand) {
+    public static void handleFire(int x, int y, int[][] pixelRead, int[][] pixelWrite, int[][] pixelAgeRead, int[][] pixelAgeWrite, Random rand) {
         if (y == 0) { // Make sure our fire is not at the y origin!
-            pixel[x][y] = Materials.NOTHING; // for now set fire at top to nothing
+            pixelWrite[x][y] = Materials.NOTHING; // for now set fire at top to nothing
+            pixelAgeWrite[x][y] = 0; // for now set fire at top to nothing
         }
-        if (pixelAge[x][y] == 10) pixel[x][y] = Materials.FIRE_ORANGE;
-        if (pixelAge[x][y] == 20) pixel[x][y] = Materials.FIRE_ORANGE_2;
-        pixelAge[x][y] += 1;
+        
+        // Age fire pixel
+        pixelWrite[x][y] = pixelRead[x][y];
+        pixelAgeWrite[x][y] = pixelAgeRead[x][y] + 1;
+        
+        // Determine what material the pixel should be
+        if (pixelAgeWrite[x][y] == 10) {
+            pixelWrite[x][y] = Materials.FIRE_ORANGE;
+        }
+        else if (pixelAgeWrite[x][y] == 20) {
+            pixelWrite[x][y] = Materials.FIRE_ORANGE_2;
+        }
+        
+        // Deal with fire particle effects
         if (y > 0) {
-            if (pixel[x][y-1] == Materials.NOTHING) {
+            if (pixelRead[x][y-1] == Materials.NOTHING) {
                 if (rand.nextInt(7) > 3) {
-                    pixel[x][y-1] = Materials.FIRE_ORANGE;
-                    pixelAge[x][y-1] = pixelAge[x][y];
+                    pixelWrite[x][y-1] = Materials.FIRE_ORANGE;
+                    pixelAgeWrite[x][y-1] = pixelAgeWrite[x][y];
                 }
             }
             if (x > 0) {
-                if (pixel[x-1][y-1] == Materials.NOTHING) {
+                if (pixelRead[x-1][y-1] == Materials.NOTHING) {
                     if (rand.nextInt(100) > 97) {
-                        pixel[x-1][y-1] = Materials.FIRE_ORANGE;
-                        pixelAge[x-1][y-1] = pixelAge[x][y];
+                        pixelWrite[x-1][y-1] = Materials.FIRE_ORANGE;
+                        pixelAgeWrite[x-1][y-1] = pixelAgeWrite[x][y];
                     }
                 }
             }
-            if (x < pixel.length - 1) {
-                if (pixel[x+1][y-1] == Materials.NOTHING) {
+            if (x < pixelRead.length - 1) {
+                if (pixelRead[x+1][y-1] == Materials.NOTHING) {
                     if (rand.nextInt(100) > 97) {
-                        pixel[x+1][y-1] = Materials.FIRE_ORANGE;
-                        pixelAge[x+1][y-1] = pixelAge[x][y];
+                        pixelWrite[x+1][y-1] = Materials.FIRE_ORANGE;
+                        pixelAgeWrite[x+1][y-1] = pixelAgeWrite[x][y];
                     }
                 }
             }
         }
-        if (pixelAge[x][y] > 30) {
-            pixel[x][y] = Materials.NOTHING;
-            pixelAge[x][y] = 0;
+        if (pixelAgeWrite[x][y] > 30) {
+            pixelWrite[x][y] = Materials.NOTHING;
+            pixelAgeWrite[x][y] = 0;
         }
     }
         
-    public static void handleFireNegation(int x, int y, int[][] pixel, int[][] pixelAge) {
+    public static void handleFireNegation(int x, int y, int[][] pixelRead, int[][] pixelWrite, int[][] pixelAgeRead, int[][] pixelAgeWrite) {
         if (y > 0) {
-            if (Materials.burns(pixel[x][y-1])) {
-                pixel[x][y-1] = Materials.NOTHING;
-                pixelAge[x][y-1] = 0;
+            if (Materials.burns(pixelRead[x][y-1])) {
+                pixelWrite[x][y-1] = Materials.NOTHING;
+                pixelAgeWrite[x][y-1] = 0;
             }
             if (x > 0) {
-                if (Materials.burns(pixel[x-1][y-1])) {
-                    pixel[x-1][y-1] = Materials.NOTHING;
-                    pixelAge[x-1][y-1] = 0;
+                if (Materials.burns(pixelRead[x-1][y-1])) {
+                    pixelWrite[x-1][y-1] = Materials.NOTHING;
+                    pixelAgeWrite[x-1][y-1] = 0;
                 }
             }
-            if (x < pixel.length - 1) {
-                if (Materials.burns(pixel[x+1][y-1])) {
-                    pixel[x+1][y-1] = Materials.NOTHING;
-                    pixelAge[x+1][y-1] = 0;
+            if (x < pixelRead.length - 1) {
+                if (Materials.burns(pixelRead[x+1][y-1])) {
+                    pixelWrite[x+1][y-1] = Materials.NOTHING;
+                    pixelAgeWrite[x+1][y-1] = 0;
                 }
             }
         }
-        if (y < pixel[0].length - 1) {
-            if (Materials.burns(pixel[x][y+1])) {
-                pixel[x][y+1] = Materials.NOTHING;
-                pixelAge[x][y+1] = 0;
+        if (y < pixelRead[0].length - 1) {
+            if (Materials.burns(pixelRead[x][y+1])) {
+                pixelWrite[x][y+1] = Materials.NOTHING;
+                pixelAgeWrite[x][y+1] = 0;
             }
             if (x > 0) {
-                if (Materials.burns(pixel[x-1][y+1])) {
-                    pixel[x-1][y+1] = Materials.NOTHING;
-                    pixelAge[x-1][y+1] = 0;
+                if (Materials.burns(pixelRead[x-1][y+1])) {
+                    pixelWrite[x-1][y+1] = Materials.NOTHING;
+                    pixelAgeWrite[x-1][y+1] = 0;
                 }
             }
-            if (x < pixel.length - 1) {
-                if (Materials.burns(pixel[x+1][y+1])) {
-                    pixel[x+1][y+1] = Materials.NOTHING;
-                    pixelAge[x+1][y+1] = 0;
+            if (x < pixelRead.length - 1) {
+                if (Materials.burns(pixelRead[x+1][y+1])) {
+                    pixelWrite[x+1][y+1] = Materials.NOTHING;
+                    pixelAgeWrite[x+1][y+1] = 0;
                 }
             }
         }
         if (x > 0) {
-            if (Materials.burns(pixel[x-1][y])) {
-                pixel[x-1][y] = Materials.NOTHING;
-                pixelAge[x-1][y] = 0;
+            if (Materials.burns(pixelRead[x-1][y])) {
+                pixelWrite[x-1][y] = Materials.NOTHING;
+                pixelAgeWrite[x-1][y] = 0;
             }
         }
-        if (x < pixel.length - 1) {
-            if (Materials.burns(pixel[x+1][y])) {
-                pixel[x+1][y] = Materials.NOTHING;
-                pixelAge[x+1][y] = 0;
+        if (x < pixelRead.length - 1) {
+            if (Materials.burns(pixelRead[x+1][y])) {
+                pixelWrite[x+1][y] = Materials.NOTHING;
+                pixelAgeWrite[x+1][y] = 0;
             }
+        }
+        //pixelWrite[x][y] = pixelRead[x][y];
+    }
+    
+    public static boolean handleBurnable(int x, int y, int[][] pixelRead, int[][] pixelWrite, int[][] pixelAgeRead, int[][] pixelAgeWrite) {
+        if (getSurroundingFireAge(x, y, pixelRead, pixelAgeRead) > Materials.getBurnIndex(pixelRead[x][y])) {
+            pixelWrite[x][y] = Materials.FIRE;
+            pixelAgeWrite[x][y] = 0;
+            return true;
+        } else {
+            return false;
         }
     }
     
-    public static void handleBurnable(int x, int y, int[][] pixel, int[][] pixelAge) {
-        if (getSurroundingFireAge(x, y, pixel, pixelAge) > Materials.getBurnIndex(pixel[x][y])) {
-            pixel[x][y] = Materials.FIRE;
-            pixelAge[x][y] = 0;
+    public static boolean handleSparkable(int x, int y, int[][] pixelRead, int[][] pixelWrite, int[][] pixelAgeRead, int[][] pixelAgeWrite) {
+        if (getSurroundingFireAge(x, y, pixelRead, pixelAgeRead) > Materials.getBurnIndex(pixelRead[x][y])) {
+            pixelWrite[x][y] = Materials.ELECTRICITY_SPARK;
+            pixelAgeWrite[x][y] = 200;
+            return true;
+        } else {
+            return false;
         }
     }
     

@@ -35,21 +35,30 @@ class GamePanel extends JPanel {
     // Panel globals
     private boolean mouseHeldIn;
     private int tickSpeed;
-    private boolean paused;
+    public static boolean paused;
     private boolean running = true;
     private boolean isDrag;
-    private boolean rowHasFlow;
-    private ArrayList<ArrayList<Integer>> streams;
-    // May not need hasFlowed anymore but keeping it just incase
-    private boolean[][] hasFlowed;
     
-    private final int[][] pixel;
-    private final int[][] pixelAge; // ONLY to be used for Fire
-    private final int[][] explosionTable;
+    // Double multi-dimensional arrays for each table so that we can appropriately
+    // perform reads and writes. Adds a little extra overhead, but it's totally
+    // worth it.
+    volatile private int[][] pixelWrite;
+    volatile private int[][] pixelRead;
+    volatile private int[][] pixelAgeWrite;
+    volatile private int[][] pixelAgeRead;
+    volatile private int[][] explosionTableWrite;
+    volatile private int[][] explosionTableRead;
+    
+    private final int[][] pixel1;
+    private final int[][] pixel2;
+    private final int[][] pixelAge1; // ONLY to be used for Fire
+    private final int[][] pixelAge2; // ONLY to be used for Fire
+    private final int[][] explosionTable1;
+    private final int[][] explosionTable2;
     private int prevXDrag, prevYDrag;
     private int cursorSize;
     
-    private int currentMaterial = Materials.SAND; // test for sand
+    private int currentMaterial = Materials.FIRE; // The initial material is fire
     
     private final Random rand;
     
@@ -70,12 +79,23 @@ class GamePanel extends JPanel {
         rand = new Random(System.currentTimeMillis()); // Use currentTimeMillis() as seed
         this.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         this.setFocusable(true);
-        rowHasFlow = false;
-        streams = new ArrayList<>();
-        hasFlowed = new boolean[WIDTH][HEIGHT];
-        pixel = new int[WIDTH][HEIGHT];
-        pixelAge = new int[WIDTH][HEIGHT];
-        explosionTable = new int[WIDTH][HEIGHT];
+        
+        pixel1 = new int[WIDTH][HEIGHT];
+        pixel2 = new int[WIDTH][HEIGHT];
+        pixelWrite = pixel1;
+        pixelRead = pixel2;
+        
+        
+        pixelAge1 = new int[WIDTH][HEIGHT];
+        pixelAge2 = new int[WIDTH][HEIGHT];
+        pixelAgeWrite = pixelAge1;
+        pixelAgeRead = pixelAge2;
+        
+        explosionTable1 = new int[WIDTH][HEIGHT];
+        explosionTable2 = new int[WIDTH][HEIGHT];
+        explosionTableWrite = explosionTable1;
+        explosionTableRead = explosionTable2;
+        
         mouseHeldIn = false;
         this.addKeyListener(new KeyAdapter() {
             @Override
@@ -209,63 +229,63 @@ class GamePanel extends JPanel {
     
     private void createPoint(int x, int y) {
         // Is our draw origin offscreen? If so then return
-        if (x < 0 || x >= pixel.length || y < 0 || y >= pixel[0].length)
+        if (x < 0 || x >= pixelRead.length || y < 0 || y >= pixelRead[0].length)
             return;
-        pixel[x][y] = currentMaterial;  // No need to check if we passed above check
-        pixelAge[x][y] = 0;  // No need to check if we passed above check
+        pixelWrite[x][y] = currentMaterial;  // No need to check if we passed above check
+        pixelAgeWrite[x][y] = 0;  // No need to check if we passed above check
         if(cursorSize == CURSOR_SIZE_MEDIUM) {
             if (x > 0) { // If our x is > 1
-                pixel[x-1][y] = currentMaterial; // This is okay
-                pixelAge[x-1][y] = 0; // This is okay
+                pixelWrite[x-1][y] = currentMaterial; // This is okay
+                pixelAgeWrite[x-1][y] = 0; // This is okay
                 if (y > 0) {
-                    pixel[x-1][y-1] = currentMaterial;
-                    pixelAge[x-1][y-1] = 0;
+                    pixelWrite[x-1][y-1] = currentMaterial;
+                    pixelAgeWrite[x-1][y-1] = 0;
                 }
-                if (y < pixel[0].length - 1) {
-                    pixel[x-1][y+1] = currentMaterial;
-                    pixelAge[x-1][y+1] = 0;
+                if (y < pixelRead[0].length - 1) {
+                    pixelWrite[x-1][y+1] = currentMaterial;
+                    pixelAgeWrite[x-1][y+1] = 0;
                 }
                 if (x > 1) {
-                    pixel[x-2][y] = currentMaterial;
-                    pixelAge[x-2][y] = 0;
+                    pixelWrite[x-2][y] = currentMaterial;
+                    pixelAgeWrite[x-2][y] = 0;
                 }
             }
-            if (x < pixel.length - 1) {
-                pixel[x+1][y] = currentMaterial; // This is okay
-                pixelAge[x+1][y] = 0; // This is okay
+            if (x < pixelRead.length - 1) {
+                pixelWrite[x+1][y] = currentMaterial; // This is okay
+                pixelAgeWrite[x+1][y] = 0; // This is okay
                 if (y > 0) {
-                    pixel[x+1][y-1] = currentMaterial;
-                    pixelAge[x+1][y-1] = 0;
+                    pixelWrite[x+1][y-1] = currentMaterial;
+                    pixelAgeWrite[x+1][y-1] = 0;
                 }
-                if (y < pixel[0].length - 1) {
-                    pixel[x+1][y+1] = currentMaterial;
-                    pixelAge[x+1][y+1] = 0;
+                if (y < pixelRead[0].length - 1) {
+                    pixelWrite[x+1][y+1] = currentMaterial;
+                    pixelAgeWrite[x+1][y+1] = 0;
                 }
-                if (x < pixel.length - 2) {
-                    pixel[x+2][y] = currentMaterial;
-                    pixelAge[x+2][y] = 0;
+                if (x < pixelRead.length - 2) {
+                    pixelWrite[x+2][y] = currentMaterial;
+                    pixelAgeWrite[x+2][y] = 0;
                 }
             }
             if (y > 0) {
-                pixel[x][y-1] = currentMaterial;
-                pixelAge[x][y-1] = 0;
+                pixelWrite[x][y-1] = currentMaterial;
+                pixelAgeWrite[x][y-1] = 0;
                 if (y > 1) {
-                    pixel[x][y-2] = currentMaterial;
-                    pixelAge[x][y-2] = 0;
+                    pixelWrite[x][y-2] = currentMaterial;
+                    pixelAgeWrite[x][y-2] = 0;
                 }
             }
-            if (y < pixel[0].length - 1) {
-                pixel[x][y+1] = currentMaterial;
-                pixelAge[x][y+1] = 0;
-                if (y < pixel[0].length - 2) {
-                    pixel[x][y+2] = currentMaterial;
-                    pixelAge[x][y+2] = 0;
+            if (y < pixelRead[0].length - 1) {
+                pixelWrite[x][y+1] = currentMaterial;
+                pixelAgeWrite[x][y+1] = 0;
+                if (y < pixelRead[0].length - 2) {
+                    pixelWrite[x][y+2] = currentMaterial;
+                    pixelAgeWrite[x][y+2] = 0;
                 }
             }
         }
         else if (cursorSize == CURSOR_SIZE_SMALL) {
-            pixel[x][y] = currentMaterial;
-            pixelAge[x][y] = 0;
+            pixelWrite[x][y] = currentMaterial;
+            pixelAgeWrite[x][y] = 0;
         }
         
         //repaint(x-2,y-2,x+2,y+2);
@@ -276,7 +296,7 @@ class GamePanel extends JPanel {
         repaint();
         prevXDrag = -1;
         prevYDrag = -1;
-        tickSpeed = 30;
+        tickSpeed = 45;
         paused = false;
         running = true;
         run();
@@ -290,15 +310,59 @@ class GamePanel extends JPanel {
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
-        for (int x = pixel.length-1; x > -1;  x--) {
-            for (int y = pixel[x].length-1; y > -1;  y--) {
-                pixel[x][y] = 0;
+        for (int x = pixelWrite.length-1; x > -1;  x--) {
+            for (int y = pixelWrite[x].length-1; y > -1;  y--) {
+                pixelWrite[x][y] = 0;
+                pixelRead[x][y] = 0;
+                pixelAgeWrite[x][y] = 0;
+                pixelAgeRead[x][y] = 0;
+                explosionTableWrite[x][y] = 0;
+                explosionTableRead[x][y] = 0;
             }
         }
         paused = false;
     }
     
+    private void swapFrames() {
+        // Swap read frames to write frames
+        // Since we do these flips at the same time, we need not worry about
+        // any special cases
+        if (pixelWrite == pixel1) {
+            // Write arrays are now suffix-2
+            pixelWrite = pixel2;
+            explosionTableWrite = explosionTable2;
+            pixelAgeWrite = pixelAge2;
+            // Read arrays are now suffix-1
+            pixelRead = pixel1;
+            pixelAgeRead = pixelAge1;
+            explosionTableRead = explosionTable1;
+        } else {
+            // Write arrays are now suffix-1
+            pixelWrite = pixel1;
+            pixelAgeWrite = pixelAge1;
+            explosionTableWrite = explosionTable1;
+            // Read arrays are now suffix-2
+            pixelRead = pixel2;
+            pixelAgeRead = pixelAge2;
+            explosionTableRead = explosionTable2;
+        }
+        
+        // Clear writing frames. We want nothing to be carried over from the
+        // read frame unless it is explicitly transferred over from the read
+        // frame.
+        for (int i = 0; i < pixelWrite.length; i++) {
+            for (int j = 0; j < pixelWrite[i].length; j++) {
+                pixelWrite[i][j] = 0;
+                pixelAgeWrite[i][j] = 0;
+                explosionTableWrite[i][j] = 0;
+            }
+        }
+    }
+    
     private void tick() {
+        // Swap int state frames and wipe write frames
+        swapFrames();
+        
         // Handle explosions
         if (mouseHeldIn) {
             createPoint(prevXDrag, prevYDrag);
@@ -306,103 +370,128 @@ class GamePanel extends JPanel {
         long random = rand.nextLong();
         rand.setSeed(System.currentTimeMillis() + random);
         
-        // RESET HASFLOWED BOOLEAN
-        for (int y = pixel[0].length-1; y > -1;  y--) {
-            for (int x = pixel.length-1; x > -1;  x--) {
-                hasFlowed[x][y] = false;
-            }
-        }
         
         Stack<int[]> antiGravStack = new Stack<>();
         
+        // This boolean determines whether a material has been handled
+        // so we know whether or not to make a direct copy of it from one
+        // array to another.
+        boolean handled = false;
+        
+        
         // LOGIC
-        for (int y = pixel[0].length-1; y > -1;  y--) {
+        for (int y = pixelRead[0].length-1; y > -1;  y--) {
             //for (int x = pixel.length-1; x > -1;  x--) {
-            for (int x = 0; x < pixel.length;  x++) {
-                // First, deal with any and all explosions
-                ExplosionHandler.handleExplosionTable(x, y, pixel, pixelAge, explosionTable, rand);
+            for (int x = 0; x < pixelRead.length;  x++) {
                 
+                // First, deal with any and all explosions -- this MAY cause some problems with the new "handled" boolean
+                if (ExplosionHandler.handleExplosionTable(x, y,
+                        pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite,
+                        explosionTableRead, explosionTableWrite, rand)) {
+                    continue;
+                }
+                    
+                    
                 // Second, skip doing anything if the current pixel is nothing
-                if(pixel[x][y] == Materials.NOTHING)
+                if(pixelRead[x][y] == Materials.NOTHING)
                 {
                     continue;
                 }
                 
                 // Handle fire
-                if (pixel[x][y] >= Materials.FIRE && pixel[x][y] <= Materials.FIRE_ORANGE_2) { // if any instance of fire
-                    FireHandler.handleFire(x, y, pixel, pixelAge, rand); // Handle dat fire
+                if (pixelRead[x][y] >= Materials.FIRE && pixelRead[x][y] <= Materials.FIRE_ORANGE_2) { // if any instance of fire
+                    FireHandler.handleFire(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, rand);
+                    continue;
+                }
+                
+                // Handle sparkables
+                if (Materials.isSparkable(pixelRead[x][y])) {
+                    if (FireHandler.handleSparkable(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite)) {
+                        continue;
+                    }
                 }
                 
                 // Handle burnables
-                if (Materials.isBurnable(pixel[x][y])) {
-                    FireHandler.handleBurnable(x, y, pixel, pixelAge); // Handle dat burnable yo
+                if (Materials.isBurnable(pixelRead[x][y])) {
+                    if (FireHandler.handleBurnable(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite)) {
+                        continue; // Continue because the burnable has become fire
+                    }
                 }
                 
                 // Handle fire negation
-                if (Materials.negatesFire(pixel[x][y])) {
-                    FireHandler.handleFireNegation(x, y, pixel, pixelAge);
+                if (Materials.negatesFire(pixelRead[x][y])) {
+                    FireHandler.handleFireNegation(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite);
+                    // Don't continue - water may need to flow
                 }
                 
                 // Handle plant growth
-                if (pixel[x][y] == Materials.PLANT) {
-                    AliveHandler.handlePlant(x, y, pixel, pixelAge);
+                if (pixelRead[x][y] == Materials.PLANT) {
+                    AliveHandler.handlePlant(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite);
+                    continue;
                 }
                 
                 // Handle water spawning
-                if (Materials.spawnsWater(pixel[x][y])) {
-                    SpawnHandler.handleSpawnsWater(x, y, pixel, rand);
+                if (Materials.spawnsWater(pixelRead[x][y])) {
+                    SpawnHandler.handleSpawnsWater(x, y, pixelRead, pixelWrite, rand);
+                    continue;
                 }
                 
                 // Handle explosive materials
-                if (Materials.getExplosiveRadius(pixel[x][y]) > 0) {
-                    ExplosionHandler.handleExplosive(x, y, pixel, pixelAge, explosionTable);
+                if (Materials.isExplosive(pixelRead[x][y])) {
+                    ExplosionHandler.handleExplosive(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, explosionTableRead, explosionTableWrite);
+                    
+                    // There's a special case to consider before continuing - gasoline flows!
+                    if (!Materials.flows(pixelRead[x][y])) {
+                        continue;
+                    }
                 }
                 
                 // Handle electricity
-                if (Materials.isElectric(pixel[x][y])) {
-                    ElectricityHandler.handleElectricity(x, y, pixel, pixelAge, rand);
+                if (Materials.isElectric(pixelRead[x][y])) {
+                    ElectricityHandler.handleElectricity(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, rand);
+                    continue;
                 }
                 
                 // Handle life seed
-                if (pixel[x][y] == Materials.LIFE_SEED) {
-                    AliveHandler.handleLifeSeed(x, y, pixel, pixelAge, rand);
+                if (pixelRead[x][y] == Materials.LIFE_SEED) {
+                    AliveHandler.handleLifeSeed(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, rand);
+                    continue;
+                }
+                
+                if (Materials.flows(pixelRead[x][y])) {
+                    FlowHandler.flow(x, y, pixelRead, pixelWrite, rand);
+                    continue;
                 }
                 
                 // Falling & Offscreen correction
-                if (y == pixel[x].length-1) { // are we at the bottom of the screen?
-                    if (Materials.falls(pixel[x][y])) {
-                        pixel[x][y] = Materials.NOTHING;
+                if (y == pixelRead[x].length-1) { // are we at the bottom of the screen?
+                    if (Materials.falls(pixelRead[x][y])) {
+                        pixelWrite[x][y] = Materials.NOTHING;
+                    } else {
+                        pixelWrite[x][y] = pixelRead[x][y];
                     }
+                    handled = true;
+                    continue;
                 }
                 else {
-                    if (Materials.falls(pixel[x][y])) {
-                        if (pixel[x][y+1] == Materials.NOTHING || Materials.canFallThrough(pixel[x][y+1])) {
-                            pixel[x][y+1] = pixel[x][y];
-                            pixel[x][y] = Materials.NOTHING;
-                        } else if (Materials.getFlowIndex(pixel[x][y]) > 0 && !hasFlowed[x][y]) { // If there's something impeding falling and this pixel hasn't flown already, check flow
-                            FlowHandler.checkFlow(x, y, pixel, streams, rand);
-                            rowHasFlow = true; // Make sure we tell the program that this row has some flow to go!
+                    if (Materials.falls(pixelRead[x][y])) {
+                        if (pixelRead[x][y+1] == Materials.NOTHING || Materials.canFallThrough(pixelRead[x][y+1])) {
+                            pixelWrite[x][y+1] = pixelRead[x][y];
+                            pixelWrite[x][y] = Materials.NOTHING;
                         }
                     }
                 }
                 
-                if(Materials.isAntiGravity(pixel[x][y])) {
+                if(Materials.isAntiGravity(pixelRead[x][y])) {
                     int[] currXY = {x, y};
                     antiGravStack.push(currXY);
+                    continue;
                 }
+                
+                if (pixelWrite[x][y] == 0) pixelWrite[x][y] = pixelRead[x][y];
                 
             } // End row
             
-            
-            
-            
-            // Check if this row has any flow, and if so, perform a flow algorithm
-            if(rowHasFlow) {
-                FlowHandler.flowRow(y, pixel, streams, rand);
-                // Reset state variables...
-                streams = new ArrayList<>(); // Create new Streams object
-                rowHasFlow = false;
-            }
             
         }
         
@@ -410,17 +499,17 @@ class GamePanel extends JPanel {
             while(!antiGravStack.isEmpty()) {
                 int[] xy = antiGravStack.pop();
                 if(xy[1] == 0) {
-                    if(Materials.isAntiGravity(pixel[xy[0]][xy[1]])) {
-                        pixel[xy[0]][xy[1]] = Materials.NOTHING;
+                    if(Materials.isAntiGravity(pixelRead[xy[0]][xy[1]])) {
+                        pixelWrite[xy[0]][xy[1]] = Materials.NOTHING;
                     }
                 }
                 else {
-                    if(Materials.isAntiGravity(pixel[xy[0]][xy[1]])) {
-                        if (pixel[xy[0]][xy[1]-1] == Materials.NOTHING || pixel[xy[0]][xy[1]-1] == Materials.ANTI_MATTER) {
-                            pixel[xy[0]][xy[1]-1] = pixel[xy[0]][xy[1]];
-                            pixel[xy[0]][xy[1]] = Materials.NOTHING;
+                    if(Materials.isAntiGravity(pixelRead[xy[0]][xy[1]])) {
+                        if (pixelRead[xy[0]][xy[1]-1] == Materials.NOTHING || pixelRead[xy[0]][xy[1]-1] == Materials.ANTI_MATTER) {
+                            pixelWrite[xy[0]][xy[1]-1] = pixelRead[xy[0]][xy[1]];
+                            pixelWrite[xy[0]][xy[1]] = Materials.NOTHING;
                         } else {
-                            ExplosionHandler.markExplosion(xy[0], xy[1], 3, pixel, pixelAge, explosionTable);       
+                            ExplosionHandler.markExplosion(xy[0], xy[1], 3, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, explosionTableRead, explosionTableWrite);       
                         }
                     }
                 }
@@ -443,7 +532,7 @@ class GamePanel extends JPanel {
             // Handle pausing
             while(paused) {
                 try {
-                    Thread.sleep(50L); // Attempt to sleep
+                    Thread.sleep(100L); // Attempt to sleep
                 } catch (InterruptedException ex) {
                     // Do nothing if it fails bc we don't care
                 }
@@ -469,15 +558,19 @@ class GamePanel extends JPanel {
         // Graphic stuff goes after this comment
         g.setColor(Materials.getColor(Materials.NOTHING));
         g.fillRect(0, 0, WIDTH-1, HEIGHT-1);
-        for (int x = 0; x < pixel.length; x++) {
-            for (int y = 0; y < pixel[x].length; y++) {
-                if (pixel[x][y] > Materials.NOTHING) {
-                    g.setColor(Materials.getColor(pixel[x][y]));
+        for (int x = 0; x < pixelRead.length; x++) {
+            for (int y = 0; y < pixelRead[x].length; y++) {
+                if (pixelRead[x][y] > Materials.NOTHING) {
+                    g.setColor(Materials.getColor(pixelRead[x][y]));
                     g.drawLine(x, y, x, y);
                 }
             }
         }
         //repaint();
+    }
+    
+    public int[][] getPixelArray() {
+        return pixelRead;
     }
     
 }
