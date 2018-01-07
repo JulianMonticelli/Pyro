@@ -14,9 +14,12 @@ import java.io.IOException;
 import javax.swing.JFileChooser;
 // JFrame or JApplet
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -75,10 +78,11 @@ public class Pyro extends JFrame {
         JMenu materials = new JMenu("Materials");
         JMenu file = new JMenu("File");
         JMenu options = new JMenu("Options");
+        JMenu help = new JMenu("Help");
         jmb.add(file);
         jmb.add(options);
         jmb.add(materials);
-        
+        jmb.add(help);
         
         
         JMenuItem clear = new JMenuItem("Clear");
@@ -257,6 +261,44 @@ public class Pyro extends JFrame {
                 panel.setMaterial(Materials.ANTI_MATTER);
             }
         });
+        
+        // Help
+        
+        JMenuItem controls = new JMenuItem("Controls");
+        help.add(controls);
+        controls.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame helpFrame = new JFrame();
+                helpFrame.setSize(350, 350);
+                
+                helpFrame.setTitle("Help");
+                
+                JLabel helpLabel = new JLabel();
+                helpLabel.setText("Help");
+                
+                JTextArea helpText = new JTextArea();
+                helpText.setPreferredSize(new Dimension(350, 350));
+                helpText.setEditable(false);
+                helpText.setText(
+                
+                "Pyro is a simple game, where you can build and destroy\n" +
+                "scenes that you make with various materials. Every material\n" +
+                "has a hotkey as listed in the materials menu. \n\n" +
+                "It is possible to draw lines by holding in CTRL before\n" +
+                "dragging a material. Upon releasing a line, it will be\n" +
+                "created. To cancel the creation of a line, one can release\n" +
+                "control and hit escape before releasing the mouse.\n"
+                
+                );
+                
+                helpFrame.add(helpLabel);
+                helpFrame.add(helpText);
+                helpFrame.setVisible(true);       
+                helpFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            }
+        });
+        
         return jmb;
     }
     

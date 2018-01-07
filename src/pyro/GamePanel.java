@@ -45,6 +45,7 @@ class GamePanel extends JPanel {
     private boolean willStartDrawingLine = false;
     private boolean isDrawingLine = false;
     private boolean isControlDown = false;
+    private boolean drawingHasBeenCancelled = false;
     private int drawStartX = -1;
     private int drawStartY = -1;
     
@@ -165,6 +166,9 @@ class GamePanel extends JPanel {
                         currentMaterial = Materials.ANTI_MATTER;
                         break;
                     case KeyEvent.VK_ESCAPE:
+                        if (isDrawingLine) {
+                            drawingHasBeenCancelled = true;
+                        }
                         clearDrawSelection();
                         break;
                     case KeyEvent.VK_CONTROL:
@@ -215,7 +219,7 @@ class GamePanel extends JPanel {
                     createSlopeFromPoints(drawStartX, drawStartY,
                             prevXDrag, prevYDrag);
                 }
-                isDrawingLine = false;
+                drawingHasBeenCancelled = false;
                 clearDrawSelection();
             }
         });
@@ -420,7 +424,7 @@ class GamePanel extends JPanel {
         swapFrames();
         
         // Handle explosions
-        if (mouseHeldIn && !isDrawingLine) {
+        if (mouseHeldIn && !isDrawingLine && !drawingHasBeenCancelled) {
             createPoint(prevXDrag, prevYDrag);
         }
         long random = rand.nextLong();
