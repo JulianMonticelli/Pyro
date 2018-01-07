@@ -6,6 +6,7 @@
 
 package pyro;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.KeyAdapter;
@@ -38,6 +39,14 @@ class GamePanel extends JPanel {
     public static boolean paused;
     private boolean running = true;
     private boolean isDrag;
+    
+    
+    // Drawing line variables
+    private boolean willStartDrawingLine = false;
+    private boolean isDrawingLine = false;
+    private boolean isControlDown = false;
+    private int drawStartX = -1;
+    private int drawStartY = -1;
     
     // Double multi-dimensional arrays for each table so that we can appropriately
     // perform reads and writes. Adds a little extra overhead, but it's totally
@@ -155,15 +164,41 @@ class GamePanel extends JPanel {
                     case KeyEvent.VK_A:
                         currentMaterial = Materials.ANTI_MATTER;
                         break;
+                    case KeyEvent.VK_ESCAPE:
+                        clearDrawSelection();
+                        break;
+                    case KeyEvent.VK_CONTROL:
+                        isControlDown = true;
+                        break;
                     default:
                         break; // Do nothing
+                }
+            }
+            
+            @Override
+            public void keyReleased(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_CONTROL:
+                        isControlDown = false;
+                        break;
+                    default:
+                        break;
                 }
             }
         });
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                createPoint(e.getX(), e.getY());
+                if (isControlDown) {
+                    isDrawingLine = true;
+                }
+                if (!isDrawingLine) {
+                    createPoint(e.getX(), e.getY());
+                }
+                if (isDrawingLine) {
+                    drawStartX = e.getX();
+                    drawStartY = e.getY();
+                }
                 mouseHeldIn = true;
                 prevXDrag = e.getX();
                 prevYDrag = e.getY();
@@ -176,17 +211,24 @@ class GamePanel extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 //isDrag = false;
                 mouseHeldIn = false;
-                prevXDrag = -1;
-                prevYDrag = -1;
+                if (isDrawingLine) {
+                    createSlopeFromPoints(drawStartX, drawStartY,
+                            prevXDrag, prevYDrag);
+                }
+                isDrawingLine = false;
+                clearDrawSelection();
             }
         });
         this.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (prevXDrag >= 0) {
-                    createSlopeFromPoints(prevXDrag, prevYDrag, e.getX(), e.getY());
-                } else
-                    createPoint(e.getX(), e.getY());
+                if (!isDrawingLine) {
+                    if (prevXDrag >= 0) {
+                        createSlopeFromPoints(prevXDrag, prevYDrag, e.getX(), e.getY());
+                    } else {
+                        createPoint(e.getX(), e.getY());
+                    }
+                }
                 
                 prevXDrag = e.getX();
                 prevYDrag = e.getY();
@@ -320,7 +362,21 @@ class GamePanel extends JPanel {
                 explosionTableRead[x][y] = 0;
             }
         }
+        clearDrawSelection();
         paused = false;
+    }
+    
+    
+    
+    
+    private void clearDrawSelection() {
+        
+        isDrawingLine = false;
+        
+        drawStartX = -1;
+        drawStartY = -1;
+        prevXDrag = -1;
+        prevYDrag = -1;
     }
     
     private void swapFrames() {
@@ -364,7 +420,7 @@ class GamePanel extends JPanel {
         swapFrames();
         
         // Handle explosions
-        if (mouseHeldIn) {
+        if (mouseHeldIn && !isDrawingLine) {
             createPoint(prevXDrag, prevYDrag);
         }
         long random = rand.nextLong();
@@ -380,7 +436,7 @@ class GamePanel extends JPanel {
         
         
         // LOGIC
-        for (int y = pixelRead[0].length-1; y > -1;  y--) {
+        for (int y = 0; y < pixelRead[0].length;  y++) {
             //for (int x = pixel.length-1; x > -1;  x--) {
             for (int x = 0; x < pixelRead.length;  x++) {
                 
@@ -426,7 +482,7 @@ class GamePanel extends JPanel {
                 
                 // Handle plant growth
                 if (pixelRead[x][y] == Materials.PLANT) {
-                    AliveHandler.handlePlant(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite);
+                    AliveHandler.handlePlant(x, y, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, rand);
                     continue;
                 }
                 
@@ -566,7 +622,30 @@ class GamePanel extends JPanel {
                 }
             }
         }
+        
+        if (isDrawingLine) {
+            drawLine(g);
+        }
+        
         //repaint();
+    }
+    
+    private void drawLine(Graphics g) {
+        Color cmColor  = Materials.getColor(currentMaterial);
+        g.setColor(new Color(cmColor.getRed(), cmColor.getGreen(),
+                cmColor.getBlue(), 128));
+        if (cursorSize == CURSOR_SIZE_SMALL) {
+            g.drawLine(drawStartX, drawStartY, prevXDrag, prevYDrag);
+        } else if (cursorSize == CURSOR_SIZE_MEDIUM) {
+            for (int x = -2; x <= 2; x++) {
+                for (int y = -2; y <= 2; y++) {
+                    if ((Math.abs(x) + Math.abs(y)) <= 2) {
+                        g.drawLine(drawStartX + x, drawStartY + y,
+                                prevXDrag + x, prevYDrag + y);
+                    }
+                }
+            }
+        }
     }
     
     public int[][] getPixelArray() {
