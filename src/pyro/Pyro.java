@@ -6,6 +6,7 @@
 package pyro;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,7 +31,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 // JFrame or JApplet
 public class Pyro extends JFrame {
     public static final int VERSION_MAJOR = 0;
-    public static final int VERSION_MINOR = 71;
+    public static final int VERSION_MINOR = 7;
+    public static final int VERSION_REVISION = 3;
     public static final char VERSION_TAG = 'A';
     
     GamePanel panel;
@@ -47,7 +49,8 @@ public class Pyro extends JFrame {
         this.add(panel);
         
         
-        this.setTitle("Pyro v" + VERSION_MAJOR + "." + VERSION_MINOR + VERSION_TAG + " by Julian Monticelli");
+        this.setTitle("Pyro v" + VERSION_MAJOR + '.' + VERSION_MINOR + '.'
+                + VERSION_REVISION + VERSION_TAG + " by Julian Monticelli");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
         //this.setLayout(new BorderLayout());
@@ -115,18 +118,54 @@ public class Pyro extends JFrame {
         });
         cursorSize.add(medium);
         
-        // Materials
+        JMenu skybox = new JMenu("Skybox");
+        options.add(skybox);
+        JMenuItem skyboxBlack = new JMenuItem("Black");
+        skybox.add(skyboxBlack);
+        skyboxBlack.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.setBackground(Color.black);
+            }
+        });
+        JMenuItem skyboxSkyBlue = new JMenuItem("Sky Blue");
+        skybox.add(skyboxSkyBlue);
+        skyboxSkyBlue.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.setBackground(Color.decode("#77abff"));
+            }
+        });
         
+        
+        
+        // Materials Menus
+        JMenu standard = new JMenu("Standard");
+        JMenu living = new JMenu("Living");
+        JMenu flammables = new JMenu("Flammables");
+        JMenu explosives = new JMenu("Explosives");
+        JMenu entities = new JMenu("Entities");
+        JMenu special = new JMenu("Special");
+        
+        materials.add(standard);
+        materials.add(living);
+        materials.add(flammables);
+        materials.add(explosives);
+        materials.add(entities);        
+        materials.add(special);
+        
+        // Materials
         JMenuItem concrete = new JMenuItem("Concrete (N)");
-        materials.add(concrete);
+        standard.add(concrete);
         concrete.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 panel.setMaterial(Materials.CONCRETE);
             }
         });
+        
         JMenuItem sand = new JMenuItem("Sand (S)");
-        materials.add(sand);
+        standard.add(sand);
         sand.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -134,7 +173,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem water = new JMenuItem("Water (W)");
-        materials.add(water);
+        standard.add(water);
         water.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -142,15 +181,23 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem wood = new JMenuItem("Wood (D)");
-        materials.add(wood);
+        standard.add(wood);
         wood.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 panel.setMaterial(Materials.WOOD);
             }
         });
+        JMenuItem rock = new JMenuItem("Rock (R)");
+        standard.add(rock);
+        rock.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.setMaterial(Materials.ROCK);
+            }
+        });
         JMenuItem fire = new JMenuItem("Fire (F)");
-        materials.add(fire);
+        flammables.add(fire);
         fire.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -158,7 +205,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem electricity = new JMenuItem("Electricity (E)");
-        materials.add(electricity);
+        flammables.add(electricity);
         electricity.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -166,7 +213,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem plant = new JMenuItem("Plant (P)");
-        materials.add(plant);
+        living.add(plant);
         plant.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -174,7 +221,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem oil = new JMenuItem("Oil (O)");
-        materials.add(oil);
+        flammables.add(oil);
         oil.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -182,7 +229,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem gas = new JMenuItem("Gasoline (G)");
-        materials.add(gas);
+        flammables.add(gas);
         gas.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -190,15 +237,15 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem lava = new JMenuItem("Lava (L)");
-        materials.add(lava);
+        flammables.add(lava);
         lava.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 panel.setMaterial(Materials.LAVA);
             }
         });
-        JMenuItem cloud = new JMenuItem("Rain Cloud (R)");
-        materials.add(cloud);
+        JMenuItem cloud = new JMenuItem("Rain Cloud (1)");
+        entities.add(cloud);
         cloud.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -206,7 +253,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem fuse = new JMenuItem("Fuse (U)");
-        materials.add(fuse);
+        explosives.add(fuse);
         fuse.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -214,7 +261,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem gunpowder = new JMenuItem("Gunpowder (X)");
-        materials.add(gunpowder);
+        explosives.add(gunpowder);
         gunpowder.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -222,7 +269,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem tnt = new JMenuItem("TNT (T)");
-        materials.add(tnt);
+        explosives.add(tnt);
         tnt.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -230,7 +277,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem c4 = new JMenuItem("C4 (C)");
-        materials.add(c4);
+        explosives.add(c4);
         c4.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -238,7 +285,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem nitro = new JMenuItem("Nitroglycerin (Y)");
-        materials.add(nitro);
+        explosives.add(nitro);
         nitro.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -246,7 +293,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem life = new JMenuItem("Life Seed (I)");
-        materials.add(life);
+        living.add(life);
         life.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -254,7 +301,7 @@ public class Pyro extends JFrame {
             }
         });
         JMenuItem antimatter = new JMenuItem("Anti Matter (A)");
-        materials.add(antimatter);
+        special.add(antimatter);
         antimatter.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

@@ -85,6 +85,7 @@ class GamePanel extends JPanel {
     }
     
     public GamePanel() {
+        this.setBackground(Color.black);
         cursorSize = CURSOR_SIZE_MEDIUM;
         rand = new Random(System.currentTimeMillis()); // Use currentTimeMillis() as seed
         this.setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -136,7 +137,7 @@ class GamePanel extends JPanel {
                         currentMaterial = Materials.LAVA;
                         break;
                     case KeyEvent.VK_R:
-                        currentMaterial = Materials.RAIN_CLOUD;
+                        currentMaterial = Materials.ROCK;
                         break;
                     case KeyEvent.VK_X:
                         currentMaterial = Materials.GUNPOWDER;
@@ -164,6 +165,9 @@ class GamePanel extends JPanel {
                         break;
                     case KeyEvent.VK_A:
                         currentMaterial = Materials.ANTI_MATTER;
+                        break;
+                    case KeyEvent.VK_1:
+                        currentMaterial = Materials.RAIN_CLOUD;
                         break;
                     case KeyEvent.VK_ESCAPE:
                         if (isDrawingLine) {
@@ -351,25 +355,19 @@ class GamePanel extends JPanel {
     }
     
     public void clear() {
-        paused = true;
-        // Wait for thread to finish draw & tick (30ms)
-        try {
-            Thread.sleep(30L);
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-        for (int x = pixelWrite.length-1; x > -1;  x--) {
-            for (int y = pixelWrite[x].length-1; y > -1;  y--) {
-                pixelWrite[x][y] = 0;
-                pixelRead[x][y] = 0;
-                pixelAgeWrite[x][y] = 0;
-                pixelAgeRead[x][y] = 0;
-                explosionTableWrite[x][y] = 0;
-                explosionTableRead[x][y] = 0;
+        synchronized (TICK_LOCK) {
+            for (int x = pixelWrite.length-1; x > -1;  x--) {
+                for (int y = pixelWrite[x].length-1; y > -1;  y--) {
+                    pixelWrite[x][y] = 0;
+                    pixelRead[x][y] = 0;
+                    pixelAgeWrite[x][y] = 0;
+                    pixelAgeRead[x][y] = 0;
+                    explosionTableWrite[x][y] = 0;
+                    explosionTableRead[x][y] = 0;
+                }
             }
+            clearDrawSelection();
         }
-        clearDrawSelection();
-        paused = false;
     }
     
     
@@ -447,10 +445,12 @@ class GamePanel extends JPanel {
             for (int x = 0; x < pixelRead.length;  x++) {
                 
                 // First, deal with any and all explosions -- this MAY cause some problems with the new "handled" boolean
-                if (ExplosionHandler.handleExplosionTable(x, y,
-                        pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite,
-                        explosionTableRead, explosionTableWrite, rand)) {
-                    continue;
+                if (explosionTableRead[x][y] > 0) {
+                    if (ExplosionHandler.handleExplosionTable(x, y,
+                            pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite,
+                            explosionTableRead, explosionTableWrite, rand)) {
+                        continue;
+                    }
                 }
                     
                     
@@ -620,8 +620,6 @@ class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g); // Need this call before painting logic
         // Graphic stuff goes after this comment
-        g.setColor(Materials.getColor(Materials.NOTHING));
-        g.fillRect(0, 0, WIDTH-1, HEIGHT-1);
         for (int x = 0; x < pixelRead.length; x++) {
             for (int y = 0; y < pixelRead[x].length; y++) {
                 if (pixelRead[x][y] > Materials.NOTHING) {

@@ -22,29 +22,30 @@ public class Materials {
     public static final int EXPLOSION_NEW_INCENDIARY = 20;
     
     public static final int NOTHING = 0;
-    public static final int CONCRETE = 1;
-    public static final int SAND = 2;
-    public static final int WATER = 3;
-    public static final int WOOD = 4;
-    public static final int FIRE = 5;
-    public static final int FIRE_ORANGE = 6;
-    public static final int FIRE_ORANGE_2 = 7;
-    public static final int PLANT = 8;
-    public static final int OIL = 9;
-    public static final int LAVA = 10;
-    public static final int RAIN_CLOUD = 11;
-    public static final int EXPLOSION_FLASH = 12;
-    public static final int EXPLOSION_FLASH_2 = 13;
-    public static final int EXPLOSION_FLASH_3 = 14;
-    public static final int EXPLOSION_FLASH_4 = 15;
-    public static final int GUNPOWDER = 16;
-    public static final int TNT = 17;
-    public static final int C4 = 18;
-    public static final int NITROGLYCERIN = 19;
-    public static final int FUSE = 20;
-    public static final int ELECTRICITY = 21;
-    public static final int ELECTRICITY_LIGHTNING = 22;
-    public static final int ELECTRICITY_SPARK = 23;
+    public static final int ROCK = 1;
+    public static final int CONCRETE = 2;
+    public static final int SAND = 3;
+    public static final int WATER = 4;
+    public static final int WOOD = 5;
+    public static final int FIRE = 6;
+    public static final int FIRE_ORANGE = FIRE+1; // 7
+    public static final int FIRE_ORANGE_2 = FIRE_ORANGE + 1; // 8
+    public static final int PLANT = 10;
+    public static final int OIL = 11;
+    public static final int LAVA = 12;
+    public static final int RAIN_CLOUD = 13;
+    public static final int EXPLOSION_FLASH = 14;
+    public static final int EXPLOSION_FLASH_2 = EXPLOSION_FLASH + 1; // 15
+    public static final int EXPLOSION_FLASH_3 = EXPLOSION_FLASH_2 + 1; // 16
+    public static final int EXPLOSION_FLASH_4 = EXPLOSION_FLASH_3 + 1; // 17
+    public static final int GUNPOWDER = 20;
+    public static final int TNT = 21;
+    public static final int C4 = 22;
+    public static final int NITROGLYCERIN = 23;
+    public static final int FUSE = 24;
+    public static final int ELECTRICITY = 26;
+    public static final int ELECTRICITY_LIGHTNING = 27;
+    public static final int ELECTRICITY_SPARK = 28;
     public static final int LIFE_SEED = 33;
     public static final int LIFE_SEED_EDGE = 34;
     public static final int GASOLINE = 35;
@@ -63,6 +64,9 @@ public class Materials {
     public static final int ANTI_MATTER_EXPLOSION_FLASH_7 = 47;
     public static final int ANTI_MATTER_EXPLOSION_FLASH_8 = 48;
     
+    public static final int WATER_REACTION_NONE = 0;
+    public static final int WATER_REACTION_DISAPPEAR = 1;
+    public static final int WATER_REACTION_OBSIDIAN = 2;
     
     private static boolean[] falls;
     private static boolean[] burns;
@@ -99,10 +103,15 @@ public class Materials {
         explosiveRadius = new int[NUM_MATERIALS];
         waterReactionIndex = new int[NUM_MATERIALS];
         
-        falls[NOTHING] = false; // Nothing doesn't fall, dumbass
+        falls[NOTHING] = false; // Nothing doesn't fall
         color[NOTHING] = Color.BLACK; // Nothing should be "empty"
         isBurnable[NOTHING] = false;
         negatesFire[NOTHING] = false;
+        
+        falls[ROCK] = false;
+        color[ROCK] = Color.decode("#424242");
+        isBurnable[ROCK] = false;
+        negatesFire[ROCK] = false;
         
         falls[CONCRETE] = false; // Concrete should be stable
         color[CONCRETE] = Color.LIGHT_GRAY;
@@ -168,6 +177,7 @@ public class Materials {
         color[LAVA] = Color.decode("#E06800");
         burns[LAVA] = true;
         flowIndex[LAVA] = 2;
+        waterReactionIndex[LAVA] = WATER_REACTION_OBSIDIAN;
         
         // RAIN_CLOUD
         falls[RAIN_CLOUD] = false;
