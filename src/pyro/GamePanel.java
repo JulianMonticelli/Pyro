@@ -17,6 +17,7 @@ import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
+import java.util.concurrent.locks.Lock;
 import javax.swing.JPanel;
 
 /**
@@ -30,8 +31,8 @@ class GamePanel extends JPanel {
     public static final int CURSOR_SIZE_SMALL = 1;
     public static final int CURSOR_SIZE_MEDIUM = 2;
     
-    
-    
+    // Locks
+    private static final Object TICK_LOCK = new Object();
     
     // Panel globals
     private boolean mouseHeldIn;
@@ -39,7 +40,6 @@ class GamePanel extends JPanel {
     public static boolean paused;
     private boolean running = true;
     private boolean isDrag;
-    
     
     // Drawing line variables
     private boolean willStartDrawingLine = false;
@@ -227,10 +227,12 @@ class GamePanel extends JPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (!isDrawingLine) {
-                    if (prevXDrag >= 0) {
-                        createSlopeFromPoints(prevXDrag, prevYDrag, e.getX(), e.getY());
-                    } else {
-                        createPoint(e.getX(), e.getY());
+                    synchronized (TICK_LOCK) {
+                        if (prevXDrag >= 0) {
+                            createSlopeFromPoints(prevXDrag, prevYDrag, e.getX(), e.getY());
+                        } else {
+                            createPoint(e.getX(), e.getY());
+                        }
                     }
                 }
                 
@@ -583,7 +585,9 @@ class GamePanel extends JPanel {
             long beforeTime = System.currentTimeMillis();
             
             // Game logic
-            tick();
+            synchronized (TICK_LOCK) {
+               tick();
+            }
             
             // Graphics
             repaint();

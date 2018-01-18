@@ -30,7 +30,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 // JFrame or JApplet
 public class Pyro extends JFrame {
     public static final int VERSION_MAJOR = 0;
-    public static final int VERSION_MINOR = 70;
+    public static final int VERSION_MINOR = 71;
     public static final char VERSION_TAG = 'A';
     
     GamePanel panel;
