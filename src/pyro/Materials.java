@@ -64,6 +64,7 @@ public class Materials {
     public static final int ANTI_MATTER_EXPLOSION_FLASH_7 = 47;
     public static final int ANTI_MATTER_EXPLOSION_FLASH_8 = 48;
     
+    // Unimplemented as of yet
     public static final int WATER_REACTION_NONE = 0;
     public static final int WATER_REACTION_DISAPPEAR = 1;
     public static final int WATER_REACTION_OBSIDIAN = 2;

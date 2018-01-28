@@ -335,7 +335,8 @@ public class Pyro extends JFrame {
                 "It is possible to draw lines by holding in CTRL before\n" +
                 "dragging a material. Upon releasing a line, it will be\n" +
                 "created. To cancel the creation of a line, one can release\n" +
-                "control and hit escape before releasing the mouse.\n"
+                "control and hit escape before releasing the mouse.\n\n" +
+                "The game can be paused and unpaused by hitting space\n"
                 
                 );
                 

@@ -37,7 +37,7 @@ class GamePanel extends JPanel {
     // Panel globals
     private boolean mouseHeldIn;
     private int tickSpeed;
-    public static boolean paused;
+    private boolean paused;
     private boolean running = true;
     private boolean isDrag;
     
@@ -178,6 +178,8 @@ class GamePanel extends JPanel {
                     case KeyEvent.VK_CONTROL:
                         isControlDown = true;
                         break;
+                    case KeyEvent.VK_SPACE:
+                        paused = !paused;
                     default:
                         break; // Do nothing
                 }
