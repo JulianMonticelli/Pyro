@@ -8,6 +8,7 @@ package pyro;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -199,6 +200,7 @@ class GamePanel extends JPanel {
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                if (paused) return;
                 if (isControlDown) {
                     isDrawingLine = true;
                 }
@@ -219,11 +221,12 @@ class GamePanel extends JPanel {
             }
             @Override
             public void mouseReleased(MouseEvent e) {
-                //isDrag = false;
                 mouseHeldIn = false;
                 if (isDrawingLine) {
-                    createSlopeFromPoints(drawStartX, drawStartY,
+                    if (!paused) {
+                        createSlopeFromPoints(drawStartX, drawStartY,
                             prevXDrag, prevYDrag);
+                    }
                 }
                 drawingHasBeenCancelled = false;
                 clearDrawSelection();
@@ -232,6 +235,7 @@ class GamePanel extends JPanel {
         this.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
+                if (paused) return;
                 if (!isDrawingLine) {
                     synchronized (TICK_LOCK) {
                         if (prevXDrag >= 0) {
@@ -635,6 +639,10 @@ class GamePanel extends JPanel {
             drawLine(g);
         }
         
+        if (paused) {
+            drawPaused(g);
+        }
+        
         //repaint();
     }
     
@@ -654,6 +662,16 @@ class GamePanel extends JPanel {
                 }
             }
         }
+    }
+    
+    private void drawPaused(Graphics g) {
+        g.setFont(new Font("Verdana", Font.PLAIN, 24));
+        g.setColor(Color.decode("#696969"));
+        g.drawString("PAUSED", 0, 20);
+        g.setColor(Color.BLACK);
+        g.drawString("PAUSED", 1, 21);
+        g.setColor(Color.RED);
+        g.drawString("PAUSED", 2, 22);
     }
     
     public int[][] getPixelArray() {

@@ -126,7 +126,7 @@ public class ExplosionHandler {
 
                 if (explosionTableRead[x][y] == 10) { // Explosion is about to be removed
                     explosionTableWrite[x][y] = 0;
-                    if (rand.nextInt(100) < 99) {
+                    if (rand.nextInt(10000) < 9997) {
                         pixelWrite[x][y] = Materials.NOTHING;
                     } else {
                         pixelWrite[x][y] = Materials.FIRE;
