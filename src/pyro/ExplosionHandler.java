@@ -7,6 +7,8 @@
 package pyro;
 
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Julian
@@ -78,24 +80,12 @@ public class ExplosionHandler {
                 if (xPos+x >= 0 && xPos+x < pixelRead.length) {
                     if (yPos+y >= 0 && yPos+y < pixelRead[0].length) {
                         if (xPos*xPos + yPos*yPos <= radius*radius) {
-                            markExplosion(xPos+x, yPos+y, explosionType, explosionTableWrite);
+                            explosionTableWrite[xPos+x][yPos+y] = explosionType;
                             pixelAgeWrite[xPos+x][yPos+y] = 0;
                         }
                     }
                 }
             }
-        }
-    }
-    
-    public static void markExplosion(int x, int y, int explosionType, int[][] explosionTable) {
-        if (explosionType == 0)
-            explosionTable[x][y] = Materials.EXPLOSION_NEW_NON_INCENDIARY;
-        else if (explosionType == 1)
-            explosionTable[x][y] = Materials.EXPLOSION_NEW_INCENDIARY;
-        else if (explosionType == 2)
-            explosionTable[x][y] = Materials.EXPLOSION_NEW_NON_INCENDIARY;
-        else if (explosionType == 3) {
-            explosionTable[x][y] = Materials.EXPLOSION_ANTI_MATTER;
         }
     }
     
@@ -115,15 +105,27 @@ public class ExplosionHandler {
                         markExplosion(x, y, getExplosionType(pixelRead[x][y]), pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, explosionTableRead, explosionTableWrite); // ?
                     }
                 }
-                if (explosionTableRead[x][y] == 7) pixelWrite[x][y] = Materials.EXPLOSION_FLASH;
-                else if (explosionTableRead[x][y] == 6) pixelWrite[x][y] = Materials.EXPLOSION_FLASH_2;
-                else if (explosionTableRead[x][y] == 4) pixelWrite[x][y] = Materials.EXPLOSION_FLASH_3;
-                else if (explosionTableRead[x][y] == 2) pixelWrite[x][y] = Materials.EXPLOSION_FLASH_4;
+                switch (explosionTableRead[x][y]) {
+                    case 7:
+                        pixelWrite[x][y] = Materials.EXPLOSION_FLASH;
+                        break;
+                    case 6:
+                        pixelWrite[x][y] = Materials.EXPLOSION_FLASH_2;
+                        break;
+                    case 4:
+                        pixelWrite[x][y] = Materials.EXPLOSION_FLASH_3;
+                        break;
+                    case 2:
+                        pixelWrite[x][y] = Materials.EXPLOSION_FLASH_4;
+                        break;
+                    default:
+                        break;
+                }
                 explosionTableWrite[x][y] = explosionTableRead[x][y] - 1;
             }
 
             else if (explosionTableRead[x][y] > 9 && explosionTableRead[x][y] < 21) { // Incendiary
-
+                            
                 if (explosionTableRead[x][y] == 10) { // Explosion is about to be removed
                     explosionTableWrite[x][y] = 0;
                     if (rand.nextInt(10000) < 9997) {
@@ -131,7 +133,6 @@ public class ExplosionHandler {
                     } else {
                         pixelWrite[x][y] = Materials.FIRE;
                     }
-                    //pixelAge[x][y] = 2;
                 }
 
                 else if (explosionTableRead[x][y] > 9 && explosionTableRead[x][y] < 21) { //
@@ -140,16 +141,31 @@ public class ExplosionHandler {
                             markExplosion(x, y, getExplosionType(pixelRead[x][y]), pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, explosionTableRead, explosionTableWrite);
                         }
                     }
-                    if (explosionTableRead[x][y] == 20) pixelWrite[x][y] = Materials.EXPLOSION_FLASH;
-                    else if (explosionTableRead[x][y] == 18) pixelWrite[x][y] = Materials.EXPLOSION_FLASH_2;
-                    else if (explosionTableRead[x][y] == 16) pixelWrite[x][y] = Materials.EXPLOSION_FLASH_3;
-                    else if (explosionTableRead[x][y] == 14) pixelWrite[x][y] = Materials.EXPLOSION_FLASH_3;
-                    else if (explosionTableRead[x][y] == 12) pixelWrite[x][y] = Materials.EXPLOSION_FLASH_4;
+                    switch (explosionTableRead[x][y]) {
+                        case 20:
+                            pixelWrite[x][y] = Materials.EXPLOSION_FLASH;
+                            break;
+                        case 18:
+                            pixelWrite[x][y] = Materials.EXPLOSION_FLASH_2;
+                            break;
+                        case 16:
+                            pixelWrite[x][y] = Materials.EXPLOSION_FLASH_3;
+                            break;
+                        case 14:
+                            pixelWrite[x][y] = Materials.EXPLOSION_FLASH_3;
+                            break;
+                        case 12:
+                            pixelWrite[x][y] = Materials.EXPLOSION_FLASH_4;
+                            break;
+                        default:
+                            break;
+                    }
                     explosionTableWrite[x][y] = explosionTableRead[x][y] - 1;
                 }
             }
             
             else if (explosionTableRead[x][y] > 55 && explosionTableRead[x][y] <= Materials.EXPLOSION_ANTI_MATTER) { // Anti Matter
+                
                 if (explosionTableRead[x][y] == 56) { // Explosion is about to be removed
                     explosionTableRead[x][y] = 0;
                     pixelWrite[x][y] = Materials.NOTHING;
@@ -163,14 +179,34 @@ public class ExplosionHandler {
                             markExplosion(x, y, getExplosionType(pixelRead[x][y]), pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, explosionTableRead, explosionTableWrite);
                         }
                     }
-                    if (explosionTableRead[x][y] == 80) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_1;
-                    else if (explosionTableRead[x][y] == 77) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_2;
-                    else if (explosionTableRead[x][y] == 74) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_3;
-                    else if (explosionTableRead[x][y] == 71) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_4;
-                    else if (explosionTableRead[x][y] == 68) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_5;
-                    else if (explosionTableRead[x][y] == 65) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_6;
-                    else if (explosionTableRead[x][y] == 62) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_7;
-                    else if (explosionTableRead[x][y] == 59) pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_8;
+                    switch (explosionTableRead[x][y]) {
+                        case 80:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_1;
+                            break;
+                        case 77:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_2;
+                            break;
+                        case 74:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_3;
+                            break;
+                        case 71:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_4;
+                            break;
+                        case 68:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_5;
+                            break;
+                        case 65:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_6;
+                            break;
+                        case 62:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_7;
+                            break;
+                        case 59:
+                            pixelWrite[x][y] = Materials.ANTI_MATTER_EXPLOSION_FLASH_8;
+                            break;
+                        default:
+                            break;
+                    }
                     explosionTableWrite[x][y] = explosionTableRead[x][y] - 1;
                 }
             }
@@ -180,11 +216,11 @@ public class ExplosionHandler {
 
     private static int getExplosionType(int i) {
         if(Materials.isIncendiaryExplosion(i)) {
-            return 1;
+            return Materials.EXPLOSION_NEW_INCENDIARY;
         }
-        else if (i == Materials.ANTI_MATTER) {
-            return 3;
+        else if (Materials.isAntiGravity(i)) {
+            return Materials.EXPLOSION_ANTI_MATTER;
         }
-        else return 0;
+        else return Materials.EXPLOSION_NEW_NON_INCENDIARY;
     }
 }

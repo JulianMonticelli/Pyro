@@ -416,6 +416,8 @@ class GamePanel extends JPanel {
         // Clear writing frames. We want nothing to be carried over from the
         // read frame unless it is explicitly transferred over from the read
         // frame.
+        // WARNING: The current ordering of the for-loop is the most efficient.
+        // The other way incurs a considerable performance penalty
         for (int i = 0; i < pixelWrite.length; i++) {
             for (int j = 0; j < pixelWrite[i].length; j++) {
                 pixelWrite[i][j] = 0;
@@ -573,11 +575,16 @@ class GamePanel extends JPanel {
                 }
                 else {
                     if(Materials.isAntiGravity(pixelRead[xy[0]][xy[1]])) {
-                        if (pixelRead[xy[0]][xy[1]-1] == Materials.NOTHING || pixelRead[xy[0]][xy[1]-1] == Materials.ANTI_MATTER) {
+                        if (pixelRead[xy[0]][xy[1]-1] == Materials.NOTHING
+                                || pixelRead[xy[0]][xy[1]-1] == Materials.ANTI_MATTER
+                                ||  
+                                (pixelRead[xy[0]][xy[1]-1] >= Materials.ANTI_MATTER_EXPLOSION_FLASH_1
+                              &&  pixelRead[xy[0]][xy[1]-1] <= Materials.ANTI_MATTER_EXPLOSION_FLASH_8)
+                                ) {
                             pixelWrite[xy[0]][xy[1]-1] = pixelRead[xy[0]][xy[1]];
                             pixelWrite[xy[0]][xy[1]] = Materials.NOTHING;
                         } else {
-                            ExplosionHandler.markExplosion(xy[0], xy[1], 3, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, explosionTableRead, explosionTableWrite);       
+                            ExplosionHandler.markExplosion(xy[0], xy[1], Materials.EXPLOSION_ANTI_MATTER, pixelRead, pixelWrite, pixelAgeRead, pixelAgeWrite, explosionTableRead, explosionTableWrite);       
                         }
                     }
                 }
@@ -602,7 +609,7 @@ class GamePanel extends JPanel {
             // Handle pausing
             while(paused) {
                 try {
-                    Thread.sleep(100L); // Attempt to sleep
+                    Thread.sleep(50L); // Attempt to sleep
                 } catch (InterruptedException ex) {
                     // Do nothing if it fails bc we don't care
                 }

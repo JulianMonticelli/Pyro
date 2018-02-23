@@ -39,7 +39,6 @@ public class Pyro extends JFrame {
     
     public Pyro() {
         panel = new GamePanel();
-        //this.setPreferredSize(new Dimension(400,400));
         
         
         JMenuBar menuBar = setupMenuBar();
