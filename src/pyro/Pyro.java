@@ -15,7 +15,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.JFileChooser;
-// JFrame or JApplet
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
