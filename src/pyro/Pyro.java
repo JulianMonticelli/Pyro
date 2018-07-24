@@ -5,6 +5,8 @@
  */
 package pyro;
 
+// "Pyro? That's a nice called game" - my nephew :)
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;

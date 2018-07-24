@@ -15,16 +15,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
-import java.util.concurrent.locks.Lock;
 import javax.swing.JPanel;
 
 /**
  * @author Julian
  */
-class GamePanel extends JPanel {
+public class GamePanel extends JPanel {
         
     // Constants
     public static final int WIDTH = 1000;
@@ -53,17 +51,17 @@ class GamePanel extends JPanel {
     // Double multi-dimensional arrays for each table so that we can appropriately
     // perform reads and writes. Adds a little extra overhead, but it's totally
     // worth it.
-    volatile private int[][] pixelWrite;
-    volatile private int[][] pixelRead;
-    volatile private int[][] pixelAgeWrite;
-    volatile private int[][] pixelAgeRead;
-    volatile private int[][] explosionTableWrite;
-    volatile private int[][] explosionTableRead;
+    volatile public int[][] pixelWrite;
+    volatile public int[][] pixelRead;
+    volatile public int[][] pixelAgeWrite;
+    volatile public int[][] pixelAgeRead;
+    volatile public int[][] explosionTableWrite;
+    volatile public int[][] explosionTableRead;
     
     private final int[][] pixel1;
     private final int[][] pixel2;
-    private final int[][] pixelAge1; // ONLY to be used for Fire
-    private final int[][] pixelAge2; // ONLY to be used for Fire
+    private final int[][] pixelAge1; 
+    private final int[][] pixelAge2; 
     private final int[][] explosionTable1;
     private final int[][] explosionTable2;
     private int prevXDrag, prevYDrag;
@@ -427,7 +425,12 @@ class GamePanel extends JPanel {
         }
     }
     
-    private void tick() {
+    
+    /***************************************************************************
+     * Ticks once, running the game logic as necessary to advance forward in
+     * logic by one frame. This method is left public due to testing.
+     */
+    public void tick(Random rand) {
         // Swap int state frames and wipe write frames
         swapFrames();
         
@@ -599,7 +602,7 @@ class GamePanel extends JPanel {
             
             // Game logic
             synchronized (TICK_LOCK) {
-               tick();
+               tick(rand);
             }
             
             // Graphics

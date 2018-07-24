@@ -7,11 +7,23 @@
 package pyro;
 
 import java.awt.Color;
+import java.util.Random;
 
 /**
  * @author Julian
  */
 public class Materials {
+    
+    // Some stuff for fire
+    public static final Random rand = new Random();
+    
+    private static int fireRed = 128;
+    private static int fireGreen = 0;
+    private static int fireBlue = 0;
+    private static int fireOrangeGreen = 0;
+    private static int fireOrangeBlue = 0;
+    // End fire stuff
+    
     private static final int NUM_MATERIALS = 50; // Add 1 every time we add a material
     
     public static final int EXPLOSION_NONE = 0;
@@ -327,6 +339,20 @@ public class Materials {
     }
     
     public static Color getColor(int material) {
+        if (material == FIRE)
+        {
+            fireBlue  = (fireBlue  + 3) % 180;
+            fireGreen = (fireGreen + 1) % 80;
+            Color color = new Color(20, fireGreen, fireBlue);
+            return color;
+        }
+        else if (material >= FIRE_ORANGE && material <= FIRE_ORANGE_2)
+        {
+            fireOrangeBlue = (fireOrangeBlue + 1) % 40;
+            fireOrangeGreen = (fireOrangeGreen + 5) % 135;
+            Color color = new Color(225, 25 + fireOrangeGreen, fireOrangeBlue);
+            return color;
+        }
         return color[material];
     }
     
